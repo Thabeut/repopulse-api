@@ -1,15 +1,23 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
+import { AuthUser } from '../../modules/auth/auth.types';
 
-export const DEMO_USER_ID = 'demo-user';
+export const CurrentUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): AuthUser => {
+    const request = ctx.switchToHttp().getRequest<Request>();
+    if (!request.user) {
+      throw new Error('CurrentUser used without FirebaseAuthGuard');
+    }
+    return request.user;
+  },
+);
 
 export const CurrentUserId = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): string => {
     const request = ctx.switchToHttp().getRequest<Request>();
-    const header = request.header('x-user-id')?.trim();
-    if (header) {
-      return header;
+    if (!request.user?.uid) {
+      throw new Error('CurrentUserId used without FirebaseAuthGuard');
     }
-    return process.env.DEMO_USER_ID?.trim() || DEMO_USER_ID;
+    return request.user.uid;
   },
 );

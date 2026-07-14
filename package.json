@@ -78,6 +78,9 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
-    "watchman": false
+    "watchman": false,
+    "setupFiles": [
+      "<rootDir>/../test/setup-firebase-auth-mock.ts"
+    ]
   }
 }

@@ -51,6 +51,23 @@ GITHUB_TOKEN=ghp_your_token_here
 
 8. Restart the API. Authenticated calls get ~5,000 req/hour (vs ~60 without a token).
 
+## Firebase Authentication (Google)
+
+1. Firebase Console → **Authentication** → **Get started**
+2. **Sign-in method** → **Google** → Enable → set support email → Save
+3. Project settings → **Your apps** → Add web app (`</>`) → register `RepoPulse Web`
+4. Copy the web config into `web/.env`:
+
+```bash
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=repopulse-f10fe.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=repopulse-f10fe
+VITE_FIREBASE_APP_ID=...
+```
+
+5. Authentication → **Settings** → **Authorized domains** — ensure `localhost` is listed
+6. API local Swagger can use `AUTH_ALLOW_DEV_HEADER=true` + header `x-user-id: demo-user` without a Google token
+
 ## Local
 
 ```bash

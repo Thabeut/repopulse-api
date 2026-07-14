@@ -1,5 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import {
   LookupRepositoryQueryDto,
   SearchRepositoriesQueryDto,
@@ -7,6 +8,8 @@ import {
 import { RepositoriesService } from './repositories.service';
 
 @ApiTags('search')
+@ApiBearerAuth()
+@UseGuards(FirebaseAuthGuard)
 @Controller('search')
 export class SearchController {
   constructor(private readonly repositoriesService: RepositoriesService) {}

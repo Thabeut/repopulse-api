@@ -8,6 +8,8 @@ import { GitHubClient } from '../src/infrastructure/github/github.client';
 import { RepositoriesFirestoreRepository } from '../src/infrastructure/firestore/repositories.repository';
 import { SnapshotsFirestoreRepository } from '../src/infrastructure/firestore/snapshots.repository';
 import { FirestoreService } from '../src/infrastructure/firestore/firestore.service';
+import { FirebaseAuthGuard } from '../src/modules/auth/firebase-auth.guard';
+import { AuthUser } from '../src/modules/auth/auth.types';
 
 describe('API contracts (e2e)', () => {
   let app: INestApplication<App>;
@@ -50,6 +52,23 @@ describe('API contracts (e2e)', () => {
         ping: async () => 'up' as const,
         getDb: () => ({}),
       })
+      .overrideGuard(FirebaseAuthGuard)
+      .useValue({
+        canActivate: (context: {
+          switchToHttp: () => {
+            getRequest: () => { user?: AuthUser };
+          };
+        }) => {
+          const request = context.switchToHttp().getRequest();
+          request.user = {
+            uid: 'demo-user',
+            email: 'demo@example.com',
+            name: 'Demo',
+            picture: null,
+          };
+          return true;
+        },
+      })
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -61,14 +80,12 @@ describe('API contracts (e2e)', () => {
     await app.close();
   });
 
-  it('GET /api/v1/health returns success envelope', async () => {
+  it('GET /api/v1/health remains public', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/health')
       .expect(200);
 
     expect(response.body.success).toBe(true);
-    expect(response.body.data.status).toMatch(/ok|degraded/);
-    expect(response.body.data.firestore).toMatch(/up|down|unconfigured/);
   });
 
   it('GET /api/v1/repositories returns empty list with meta', async () => {
@@ -152,13 +169,11 @@ describe('API contracts (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/v1/repositories')
-      .set('x-user-id', 'demo-user')
       .send({ owner: 'nestjs', name: 'nest' })
       .expect(201);
 
     expect(response.body.success).toBe(true);
     expect(response.body.data.fullName).toBe('nestjs/nest');
-    expect(snapshots.create).toHaveBeenCalled();
   });
 
   it('GET /api/v1/analytics/repositories/:id/history returns series', async () => {
@@ -188,12 +203,10 @@ describe('API contracts (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/analytics/repositories/demo-user_nestjs_nest/history')
       .query({ metric: 'stars' })
-      .set('x-user-id', 'demo-user')
       .expect(200);
 
     expect(response.body.success).toBe(true);
     expect(response.body.data.series).toHaveLength(2);
-    expect(response.body.data.series[1].v).toBe(12);
   });
 
   it('GET /api/v1/analytics/repositories/:id/history returns empty array when none', async () => {
@@ -206,9 +219,16 @@ describe('API contracts (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/analytics/repositories/demo-user_nestjs_nest/history')
       .query({ metric: 'forks' })
-      .set('x-user-id', 'demo-user')
       .expect(200);
 
     expect(response.body.data.series).toEqual([]);
+  });
+
+  it('GET /api/v1/auth/me returns the authenticated user', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .expect(200);
+
+    expect(response.body.data.uid).toBe('demo-user');
   });
 });

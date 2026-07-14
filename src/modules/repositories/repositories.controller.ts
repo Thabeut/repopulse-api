@@ -7,9 +7,11 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiHeader, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CurrentUserId } from '../../common/decorators/current-user-id.decorator';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import {
   FavoriteRepositoryDto,
   ListRepositoriesQueryDto,
@@ -18,11 +20,13 @@ import {
 import { RepositoriesService } from './repositories.service';
 
 @ApiTags('repositories')
+@ApiBearerAuth()
 @ApiHeader({
   name: 'x-user-id',
   required: false,
-  description: 'Temporary user id until Firebase Auth (Phase 8)',
+  description: 'Dev-only when AUTH_ALLOW_DEV_HEADER=true',
 })
+@UseGuards(FirebaseAuthGuard)
 @Controller('repositories')
 export class RepositoriesController {
   constructor(private readonly repositoriesService: RepositoriesService) {}

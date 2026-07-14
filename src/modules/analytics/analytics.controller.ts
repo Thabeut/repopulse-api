@@ -1,15 +1,18 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiHeader, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CurrentUserId } from '../../common/decorators/current-user-id.decorator';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { AnalyticsService } from './analytics.service';
 import { HistoryQueryDto } from './dto/analytics.dto';
 
 @ApiTags('analytics')
+@ApiBearerAuth()
 @ApiHeader({
   name: 'x-user-id',
   required: false,
-  description: 'Temporary user id until Firebase Auth (Phase 8)',
+  description: 'Dev-only when AUTH_ALLOW_DEV_HEADER=true',
 })
+@UseGuards(FirebaseAuthGuard)
 @Controller('analytics')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}

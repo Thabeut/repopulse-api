@@ -76,6 +76,10 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   FIREBASE_PRIVATE_KEY?: string;
+
+  @IsOptional()
+  @IsBooleanString()
+  AUTH_ALLOW_DEV_HEADER?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
