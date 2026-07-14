@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 import { validateEnv } from './config/env.validation';
-import { CacheModule } from './infrastructure/cache/cache.module';
 import { FirestoreModule } from './infrastructure/firestore/firestore.module';
 import { GitHubModule } from './infrastructure/github/github.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -21,7 +20,6 @@ import { SyncModule } from './modules/sync/sync.module';
     }),
     FirestoreModule,
     GitHubModule,
-    CacheModule,
     HealthModule,
     AuthModule,
     RepositoriesModule,
