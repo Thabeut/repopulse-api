@@ -45,7 +45,7 @@ export class SnapshotsFirestoreRepository {
     let query: Query = db
       .collection(COLLECTIONS.repositorySnapshots)
       .where('repositoryId', '==', repositoryId)
-      .orderBy('capturedAt', 'asc');
+      .orderBy('capturedAt', 'desc');
 
     if (options?.from) {
       query = query.where('capturedAt', '>=', options.from);
@@ -55,9 +55,10 @@ export class SnapshotsFirestoreRepository {
     }
 
     const snapshot = await query.get();
-    return snapshot.docs.map(
+    const items = snapshot.docs.map(
       (doc: QueryDocumentSnapshot) => doc.data() as RepositorySnapshot,
     );
+    return items.reverse();
   }
 
   async deleteByRepositoryId(repositoryId: string): Promise<number> {

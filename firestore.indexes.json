@@ -63,14 +63,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "repositoryId", "order": "ASCENDING" },
-        { "fieldPath": "capturedAt", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "repository_snapshots",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "repositoryId", "order": "ASCENDING" },
         { "fieldPath": "capturedAt", "order": "DESCENDING" }
       ]
     }
