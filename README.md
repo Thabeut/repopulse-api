@@ -35,6 +35,22 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY
 
 5. Restart the API. `GET /api/v1/health` should show `"firestore": "up"`.
 
+## GitHub token
+
+1. Open https://github.com/settings/tokens
+2. **Generate new token** → **Generate new token (classic)**
+3. Note: `RepoPulse local`
+4. Expiration: 90 days (or your preference)
+5. Scopes: leave all unchecked (public API read is enough) — or tick **public_repo** if you prefer
+6. Generate → copy the token once
+7. Put it in `api/.env`:
+
+```bash
+GITHUB_TOKEN=ghp_your_token_here
+```
+
+8. Restart the API. Authenticated calls get ~5,000 req/hour (vs ~60 without a token).
+
 ## Local
 
 ```bash
