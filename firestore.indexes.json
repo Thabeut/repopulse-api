@@ -1,0 +1,54 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "repositories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "repositories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "stars", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "repositories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "name", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "repositories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "favorited", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "repository_snapshots",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "repositoryId", "order": "ASCENDING" },
+        { "fieldPath": "capturedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "repository_snapshots",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "repositoryId", "order": "ASCENDING" },
+        { "fieldPath": "capturedAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -36,6 +36,8 @@ Fill `.env` (see `.env.example`):
 | `CORS_ORIGINS`          | Comma-separated origins (include your Vercel URL) |
 | `AUTH_ALLOW_DEV_HEADER` | `true` locally for Swagger + `x-user-id`          |
 
+Composite indexes: if Firestore returns `FAILED_PRECONDITION` (missing index), open the link in that error once, or deploy `firestore.indexes.json` from this repo.
+
 Local: http://localhost:3000/api/v1/health · http://localhost:3000/api
 
 ```bash
