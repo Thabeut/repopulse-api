@@ -54,21 +54,6 @@ export interface SavedRepository {
   updatedAt: string;
 }
 
-export type SnapshotSource = 'manual' | 'cron' | 'save';
-
-export interface RepositorySnapshot {
-  id: string;
-  repositoryId: string;
-  userId: string;
-  fullName: string;
-  stars: number;
-  forks: number;
-  watchers: number;
-  openIssues: number;
-  capturedAt: string;
-  source: SnapshotSource;
-}
-
 export interface UserProfile {
   uid: string;
   email: string | null;

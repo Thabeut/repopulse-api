@@ -1,8 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { GitHubClient } from '../../infrastructure/github/github.client';
 import { RepositoriesFirestoreRepository } from '../../infrastructure/firestore/repositories.repository';
-import { SnapshotsFirestoreRepository } from '../../infrastructure/firestore/snapshots.repository';
 import { RepositoriesService } from './repositories.service';
 import { SavedRepository } from './domain/repository.types';
 
@@ -19,20 +17,10 @@ describe('RepositoriesService', () => {
     upsert: jest.fn(),
     delete: jest.fn(),
   };
-  const snapshots = {
-    create: jest.fn(),
-    deleteByRepositoryId: jest.fn(),
-    pruneOlderThan: jest.fn(),
-  };
-  const config = {
-    get: jest.fn().mockReturnValue(90),
-  };
 
   const service = new RepositoriesService(
     github as unknown as GitHubClient,
     repositories as unknown as RepositoriesFirestoreRepository,
-    snapshots as unknown as SnapshotsFirestoreRepository,
-    config as unknown as ConfigService,
   );
 
   const normalized = {
@@ -70,12 +58,10 @@ describe('RepositoriesService', () => {
     ).resolves.toEqual({ total: 1, items: [] });
   });
 
-  it('saves a new repository and writes a snapshot', async () => {
+  it('saves a new repository', async () => {
     github.fetchFullRepository.mockResolvedValue(normalized);
     repositories.findById.mockResolvedValue(null);
     repositories.create.mockImplementation(async (entity: SavedRepository) => entity);
-    snapshots.create.mockResolvedValue({});
-    snapshots.pruneOlderThan.mockResolvedValue(0);
 
     const saved = await service.save('demo-user', {
       owner: 'nestjs',
@@ -85,13 +71,6 @@ describe('RepositoriesService', () => {
     expect(saved.id).toBe('demo-user_nestjs_nest');
     expect(saved.userId).toBe('demo-user');
     expect(repositories.create).toHaveBeenCalled();
-    expect(snapshots.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        repositoryId: 'demo-user_nestjs_nest',
-        source: 'save',
-        stars: 10,
-      }),
-    );
   });
 
   it('lists repositories with pagination meta', async () => {
@@ -111,7 +90,7 @@ describe('RepositoriesService', () => {
     );
   });
 
-  it('refreshes and writes a manual snapshot', async () => {
+  it('refreshes an existing repository', async () => {
     const existing: SavedRepository = {
       id: 'demo-user_nestjs_nest',
       userId: 'demo-user',
@@ -147,8 +126,6 @@ describe('RepositoriesService', () => {
     repositories.findById.mockResolvedValue(existing);
     repositories.upsert.mockImplementation(async (entity: SavedRepository) => entity);
     github.fetchFullRepository.mockResolvedValue({ ...normalized, stars: 99 });
-    snapshots.create.mockResolvedValue({});
-    snapshots.pruneOlderThan.mockResolvedValue(0);
 
     const refreshed = await service.refresh(
       'demo-user',
@@ -157,23 +134,16 @@ describe('RepositoriesService', () => {
 
     expect(refreshed.stars).toBe(99);
     expect(refreshed.favorited).toBe(true);
-    expect(snapshots.create).toHaveBeenCalledWith(
-      expect.objectContaining({ source: 'manual', stars: 99 }),
-    );
   });
 
-  it('deletes repository and related snapshots', async () => {
+  it('deletes repository', async () => {
     repositories.findById.mockResolvedValue({
       id: 'demo-user_nestjs_nest',
       userId: 'demo-user',
     });
-    snapshots.deleteByRepositoryId.mockResolvedValue(2);
     repositories.delete.mockResolvedValue(undefined);
 
     await service.remove('demo-user', 'demo-user_nestjs_nest');
-    expect(snapshots.deleteByRepositoryId).toHaveBeenCalledWith(
-      'demo-user_nestjs_nest',
-    );
     expect(repositories.delete).toHaveBeenCalledWith('demo-user_nestjs_nest');
   });
 

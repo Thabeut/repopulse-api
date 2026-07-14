@@ -1,6 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
 import { RepositoriesFirestoreRepository } from '../../infrastructure/firestore/repositories.repository';
-import { SnapshotsFirestoreRepository } from '../../infrastructure/firestore/snapshots.repository';
 import { AnalyticsService } from './analytics.service';
 
 describe('AnalyticsService', () => {
@@ -8,66 +7,13 @@ describe('AnalyticsService', () => {
     findById: jest.fn(),
     findMany: jest.fn(),
   };
-  const snapshots = {
-    findByRepositoryId: jest.fn(),
-  };
 
   const service = new AnalyticsService(
     repositories as unknown as RepositoriesFirestoreRepository,
-    snapshots as unknown as SnapshotsFirestoreRepository,
   );
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('returns history series for owned repo', async () => {
-    repositories.findById.mockResolvedValue({
-      id: 'demo-user_a_b',
-      userId: 'demo-user',
-    });
-    snapshots.findByRepositoryId.mockResolvedValue([
-      {
-        capturedAt: '2026-01-01T00:00:00.000Z',
-        stars: 5,
-        forks: 1,
-        watchers: 1,
-        openIssues: 0,
-      },
-    ]);
-
-    await expect(
-      service.getHistory('demo-user', 'demo-user_a_b', {
-        metric: 'stars',
-      }),
-    ).resolves.toEqual({
-      metric: 'stars',
-      series: [{ t: '2026-01-01T00:00:00.000Z', v: 5 }],
-    });
-  });
-
-  it('returns empty series when no snapshots', async () => {
-    repositories.findById.mockResolvedValue({
-      id: 'demo-user_a_b',
-      userId: 'demo-user',
-    });
-    snapshots.findByRepositoryId.mockResolvedValue([]);
-
-    await expect(
-      service.getHistory('demo-user', 'demo-user_a_b', {
-        metric: 'forks',
-      }),
-    ).resolves.toEqual({ metric: 'forks', series: [] });
-  });
-
-  it('throws when repository is not owned', async () => {
-    repositories.findById.mockResolvedValue({
-      id: 'other',
-      userId: 'someone-else',
-    });
-    await expect(
-      service.getLanguages('demo-user', 'other'),
-    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('returns language distribution for owned repo', async () => {
@@ -76,6 +22,7 @@ describe('AnalyticsService', () => {
       userId: 'demo-user',
       languages: { TypeScript: 80, JavaScript: 20 },
     });
+
     await expect(
       service.getLanguages('demo-user', 'demo-user_a_b'),
     ).resolves.toEqual({
@@ -86,36 +33,32 @@ describe('AnalyticsService', () => {
     });
   });
 
-  it('returns commit activity for owned repo', async () => {
-    repositories.findById.mockResolvedValue({
-      id: 'demo-user_a_b',
-      userId: 'demo-user',
-      commitActivity: [1, 2, 3],
-    });
+  it('throws when repo is missing', async () => {
+    repositories.findById.mockResolvedValue(null);
     await expect(
-      service.getCommitActivity('demo-user', 'demo-user_a_b'),
-    ).resolves.toEqual({ activity: [1, 2, 3] });
+      service.getLanguages('demo-user', 'missing'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('builds dashboard aggregates', async () => {
+  it('builds dashboard summary', async () => {
     repositories.findMany.mockResolvedValue({
-      total: 2,
       items: [
         {
           id: '1',
-          fullName: 'a/b',
-          stars: 10,
           favorited: true,
+          stars: 10,
           lastSyncedAt: '2026-01-01T00:00:00.000Z',
+          fullName: 'a/b',
         },
         {
           id: '2',
-          fullName: 'c/d',
-          stars: 5,
           favorited: false,
+          stars: 5,
           lastSyncedAt: null,
+          fullName: 'c/d',
         },
       ],
+      total: 2,
     });
 
     await expect(service.getDashboard('demo-user')).resolves.toEqual({

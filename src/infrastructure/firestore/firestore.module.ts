@@ -3,7 +3,6 @@ import { FIREBASE_APP, FIRESTORE } from './firestore.constants';
 import { firestoreProviders } from './firestore.provider';
 import { FirestoreService } from './firestore.service';
 import { RepositoriesFirestoreRepository } from './repositories.repository';
-import { SnapshotsFirestoreRepository } from './snapshots.repository';
 import { UsersFirestoreRepository } from './users.repository';
 
 @Global()
@@ -12,7 +11,6 @@ import { UsersFirestoreRepository } from './users.repository';
     ...firestoreProviders,
     FirestoreService,
     RepositoriesFirestoreRepository,
-    SnapshotsFirestoreRepository,
     UsersFirestoreRepository,
   ],
   exports: [
@@ -20,7 +18,6 @@ import { UsersFirestoreRepository } from './users.repository';
     FIRESTORE,
     FirestoreService,
     RepositoriesFirestoreRepository,
-    SnapshotsFirestoreRepository,
     UsersFirestoreRepository,
   ],
 })

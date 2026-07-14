@@ -61,11 +61,6 @@ class EnvironmentVariables {
   SYNC_MIN_INTERVAL_MINUTES?: number;
 
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  SNAPSHOT_RETENTION?: number;
-
-  @IsOptional()
   @IsString()
   FIREBASE_PROJECT_ID?: string;
 

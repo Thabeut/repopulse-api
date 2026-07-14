@@ -2,17 +2,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { buildPaginationMeta } from '../../common/utils/pagination.util';
 import { GitHubClient } from '../../infrastructure/github/github.client';
 import { NormalizedRepository } from '../../infrastructure/github/github.types';
 import { RepositoriesFirestoreRepository } from '../../infrastructure/firestore/repositories.repository';
-import { SnapshotsFirestoreRepository } from '../../infrastructure/firestore/snapshots.repository';
 import { buildRepositoryDocId, nowIso } from '../../infrastructure/firestore/firestore.utils';
-import {
-  SavedRepository,
-  SnapshotSource,
-} from './domain/repository.types';
+import { SavedRepository } from './domain/repository.types';
 import {
   FavoriteRepositoryDto,
   ListRepositoriesQueryDto,
@@ -26,8 +21,6 @@ export class RepositoriesService {
   constructor(
     private readonly github: GitHubClient,
     private readonly repositories: RepositoriesFirestoreRepository,
-    private readonly snapshots: SnapshotsFirestoreRepository,
-    private readonly config: ConfigService,
   ) {}
 
   search(query: SearchRepositoriesQueryDto) {
@@ -44,7 +37,7 @@ export class RepositoriesService {
       dto.name,
       { bypassCache: true },
     );
-    return this.persistNormalized(userId, normalized, 'save');
+    return this.persistNormalized(userId, normalized);
   }
 
   async list(userId: string, query: ListRepositoriesQueryDto) {
@@ -87,13 +80,10 @@ export class RepositoriesService {
 
   async refresh(userId: string, id: string): Promise<SavedRepository> {
     const existing = await this.getById(userId, id);
-    return this.syncExisting(existing, 'manual');
+    return this.syncExisting(existing);
   }
 
-  async syncExisting(
-    existing: SavedRepository,
-    source: SnapshotSource,
-  ): Promise<SavedRepository> {
+  async syncExisting(existing: SavedRepository): Promise<SavedRepository> {
     await this.repositories.upsert({
       ...existing,
       syncStatus: 'syncing',
@@ -106,12 +96,7 @@ export class RepositoriesService {
         existing.name,
         { bypassCache: true },
       );
-      return this.persistNormalized(
-        existing.userId,
-        normalized,
-        source,
-        existing,
-      );
+      return this.persistNormalized(existing.userId, normalized, existing);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Sync failed';
@@ -138,14 +123,12 @@ export class RepositoriesService {
 
   async remove(userId: string, id: string): Promise<void> {
     await this.getById(userId, id);
-    await this.snapshots.deleteByRepositoryId(id);
     await this.repositories.delete(id);
   }
 
   private async persistNormalized(
     userId: string,
     normalized: NormalizedRepository,
-    source: SnapshotSource,
     previous?: SavedRepository,
   ): Promise<SavedRepository> {
     const id = buildRepositoryDocId(
@@ -190,24 +173,8 @@ export class RepositoriesService {
       updatedAt: now,
     };
 
-    const saved = existingDoc
-      ? await this.repositories.upsert(entity)
-      : await this.repositories.create(entity);
-    await this.snapshots.create({
-      repositoryId: saved.id,
-      userId,
-      fullName: saved.fullName,
-      stars: saved.stars,
-      forks: saved.forks,
-      watchers: saved.watchers,
-      openIssues: saved.openIssues,
-      source,
-    });
-
-    const retention =
-      this.config.get<number>('snapshotRetention') ?? 90;
-    await this.snapshots.pruneOlderThan(saved.id, retention);
-
-    return saved;
+    return existingDoc
+      ? this.repositories.upsert(entity)
+      : this.repositories.create(entity);
   }
 }

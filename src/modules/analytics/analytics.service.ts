@@ -1,31 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RepositoriesFirestoreRepository } from '../../infrastructure/firestore/repositories.repository';
-import { SnapshotsFirestoreRepository } from '../../infrastructure/firestore/snapshots.repository';
 import { SavedRepository } from '../repositories/domain/repository.types';
-import { HistoryQueryDto } from './dto/analytics.dto';
-import {
-  buildHistorySeries,
-  buildLanguageDistribution,
-} from './analytics.utils';
+import { buildLanguageDistribution } from './analytics.utils';
 
 @Injectable()
 export class AnalyticsService {
   constructor(
     private readonly repositories: RepositoriesFirestoreRepository,
-    private readonly snapshots: SnapshotsFirestoreRepository,
   ) {}
-
-  async getHistory(userId: string, repositoryId: string, query: HistoryQueryDto) {
-    await this.requireOwnedRepo(userId, repositoryId);
-    const snapshots = await this.snapshots.findByRepositoryId(repositoryId, {
-      from: query.from,
-      to: query.to,
-    });
-    return {
-      metric: query.metric,
-      series: buildHistorySeries(snapshots, query.metric),
-    };
-  }
 
   async getLanguages(userId: string, repositoryId: string) {
     const repo = await this.requireOwnedRepo(userId, repositoryId);

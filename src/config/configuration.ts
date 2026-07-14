@@ -28,7 +28,6 @@ export default () => ({
     concurrency: parseInt(process.env.SYNC_CONCURRENCY ?? '2', 10),
     minIntervalMinutes: parseInt(process.env.SYNC_MIN_INTERVAL_MINUTES ?? '30', 10),
   },
-  snapshotRetention: parseInt(process.env.SNAPSHOT_RETENTION ?? '90', 10),
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID ?? '',
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? '',

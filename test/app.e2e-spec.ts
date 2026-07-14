@@ -6,7 +6,6 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/common/configure-app';
 import { GitHubClient } from '../src/infrastructure/github/github.client';
 import { RepositoriesFirestoreRepository } from '../src/infrastructure/firestore/repositories.repository';
-import { SnapshotsFirestoreRepository } from '../src/infrastructure/firestore/snapshots.repository';
 import { FirestoreService } from '../src/infrastructure/firestore/firestore.service';
 import { FirebaseAuthGuard } from '../src/modules/auth/firebase-auth.guard';
 import { AuthUser } from '../src/modules/auth/auth.types';
@@ -26,12 +25,6 @@ describe('API contracts (e2e)', () => {
     upsert: jest.fn(),
     delete: jest.fn(),
   };
-  const snapshots = {
-    create: jest.fn(),
-    deleteByRepositoryId: jest.fn(),
-    pruneOlderThan: jest.fn(),
-    findByRepositoryId: jest.fn(),
-  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -44,8 +37,6 @@ describe('API contracts (e2e)', () => {
       .useValue(github)
       .overrideProvider(RepositoriesFirestoreRepository)
       .useValue(repositories)
-      .overrideProvider(SnapshotsFirestoreRepository)
-      .useValue(snapshots)
       .overrideProvider(FirestoreService)
       .useValue({
         isConfigured: () => true,
@@ -164,8 +155,6 @@ describe('API contracts (e2e)', () => {
     });
     repositories.findById.mockResolvedValue(null);
     repositories.create.mockImplementation(async (entity) => entity);
-    snapshots.create.mockResolvedValue({});
-    snapshots.pruneOlderThan.mockResolvedValue(0);
 
     const response = await request(app.getHttpServer())
       .post('/api/v1/repositories')
@@ -176,52 +165,20 @@ describe('API contracts (e2e)', () => {
     expect(response.body.data.fullName).toBe('nestjs/nest');
   });
 
-  it('GET /api/v1/analytics/repositories/:id/history returns series', async () => {
+  it('GET /api/v1/analytics/repositories/:id/languages returns distribution', async () => {
     repositories.findById.mockResolvedValue({
       id: 'demo-user_nestjs_nest',
       userId: 'demo-user',
       languages: { TypeScript: 80, JavaScript: 20 },
       commitActivity: [1, 2, 3],
     });
-    snapshots.findByRepositoryId.mockResolvedValue([
-      {
-        capturedAt: '2026-01-01T00:00:00.000Z',
-        stars: 10,
-        forks: 1,
-        watchers: 1,
-        openIssues: 0,
-      },
-      {
-        capturedAt: '2026-01-02T00:00:00.000Z',
-        stars: 12,
-        forks: 1,
-        watchers: 1,
-        openIssues: 0,
-      },
-    ]);
 
     const response = await request(app.getHttpServer())
-      .get('/api/v1/analytics/repositories/demo-user_nestjs_nest/history')
-      .query({ metric: 'stars' })
+      .get('/api/v1/analytics/repositories/demo-user_nestjs_nest/languages')
       .expect(200);
 
     expect(response.body.success).toBe(true);
-    expect(response.body.data.series).toHaveLength(2);
-  });
-
-  it('GET /api/v1/analytics/repositories/:id/history returns empty array when none', async () => {
-    repositories.findById.mockResolvedValue({
-      id: 'demo-user_nestjs_nest',
-      userId: 'demo-user',
-    });
-    snapshots.findByRepositoryId.mockResolvedValue([]);
-
-    const response = await request(app.getHttpServer())
-      .get('/api/v1/analytics/repositories/demo-user_nestjs_nest/history')
-      .query({ metric: 'forks' })
-      .expect(200);
-
-    expect(response.body.data.series).toEqual([]);
+    expect(response.body.data.languages).toHaveLength(2);
   });
 
   it('GET /api/v1/auth/me returns the authenticated user', async () => {
@@ -249,21 +206,17 @@ describe('API contracts (e2e)', () => {
     expect(response.body.data.favorited).toBe(true);
   });
 
-  it('DELETE /api/v1/repositories/:id removes repo and snapshots', async () => {
+  it('DELETE /api/v1/repositories/:id removes repo', async () => {
     repositories.findById.mockResolvedValue({
       id: 'demo-user_nestjs_nest',
       userId: 'demo-user',
     });
-    snapshots.deleteByRepositoryId.mockResolvedValue(1);
     repositories.delete.mockResolvedValue(undefined);
 
     await request(app.getHttpServer())
       .delete('/api/v1/repositories/demo-user_nestjs_nest')
       .expect(200);
 
-    expect(snapshots.deleteByRepositoryId).toHaveBeenCalledWith(
-      'demo-user_nestjs_nest',
-    );
     expect(repositories.delete).toHaveBeenCalledWith('demo-user_nestjs_nest');
   });
 

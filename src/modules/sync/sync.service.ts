@@ -91,7 +91,7 @@ export class SyncService {
 
       await this.mapPool(due, concurrency, async (repo) => {
         try {
-          await this.repositoriesService.syncExisting(repo, 'cron');
+          await this.repositoriesService.syncExisting(repo);
           synced += 1;
         } catch (error) {
           failed += 1;

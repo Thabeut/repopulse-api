@@ -1,25 +1,7 @@
-import { RepositorySnapshot } from '../repositories/domain/repository.types';
-import { HistoryMetric } from './dto/analytics.dto';
-
-export interface HistoryPoint {
-  t: string;
-  v: number;
-}
-
 export interface LanguageShare {
   name: string;
   bytes: number;
   percent: number;
-}
-
-export function buildHistorySeries(
-  snapshots: RepositorySnapshot[],
-  metric: HistoryMetric,
-): HistoryPoint[] {
-  return snapshots.map((snapshot) => ({
-    t: snapshot.capturedAt,
-    v: snapshot[metric],
-  }));
 }
 
 export function buildLanguageDistribution(

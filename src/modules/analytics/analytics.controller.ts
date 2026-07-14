@@ -1,9 +1,8 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CurrentUserId } from '../../common/decorators/current-user-id.decorator';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { AnalyticsService } from './analytics.service';
-import { HistoryQueryDto } from './dto/analytics.dto';
 
 @ApiTags('analytics')
 @ApiBearerAuth()
@@ -20,15 +19,6 @@ export class AnalyticsController {
   @Get('dashboard')
   dashboard(@CurrentUserId() userId: string) {
     return this.analyticsService.getDashboard(userId);
-  }
-
-  @Get('repositories/:id/history')
-  history(
-    @CurrentUserId() userId: string,
-    @Param('id') id: string,
-    @Query() query: HistoryQueryDto,
-  ) {
-    return this.analyticsService.getHistory(userId, id, query);
   }
 
   @Get('repositories/:id/languages')
