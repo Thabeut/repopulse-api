@@ -28,6 +28,7 @@ describe('API contracts (e2e)', () => {
     create: jest.fn(),
     deleteByRepositoryId: jest.fn(),
     pruneOlderThan: jest.fn(),
+    findByRepositoryId: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -158,5 +159,56 @@ describe('API contracts (e2e)', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data.fullName).toBe('nestjs/nest');
     expect(snapshots.create).toHaveBeenCalled();
+  });
+
+  it('GET /api/v1/analytics/repositories/:id/history returns series', async () => {
+    repositories.findById.mockResolvedValue({
+      id: 'demo-user_nestjs_nest',
+      userId: 'demo-user',
+      languages: { TypeScript: 80, JavaScript: 20 },
+      commitActivity: [1, 2, 3],
+    });
+    snapshots.findByRepositoryId.mockResolvedValue([
+      {
+        capturedAt: '2026-01-01T00:00:00.000Z',
+        stars: 10,
+        forks: 1,
+        watchers: 1,
+        openIssues: 0,
+      },
+      {
+        capturedAt: '2026-01-02T00:00:00.000Z',
+        stars: 12,
+        forks: 1,
+        watchers: 1,
+        openIssues: 0,
+      },
+    ]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/analytics/repositories/demo-user_nestjs_nest/history')
+      .query({ metric: 'stars' })
+      .set('x-user-id', 'demo-user')
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.series).toHaveLength(2);
+    expect(response.body.data.series[1].v).toBe(12);
+  });
+
+  it('GET /api/v1/analytics/repositories/:id/history returns empty array when none', async () => {
+    repositories.findById.mockResolvedValue({
+      id: 'demo-user_nestjs_nest',
+      userId: 'demo-user',
+    });
+    snapshots.findByRepositoryId.mockResolvedValue([]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/analytics/repositories/demo-user_nestjs_nest/history')
+      .query({ metric: 'forks' })
+      .set('x-user-id', 'demo-user')
+      .expect(200);
+
+    expect(response.body.data.series).toEqual([]);
   });
 });
