@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Query, QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { SavedRepository } from '../../modules/repositories/domain/repository.types';
 import { COLLECTIONS } from './firestore.constants';
 import { FirestoreService } from './firestore.service';
@@ -72,35 +72,46 @@ export class RepositoriesFirestoreRepository {
     params: ListRepositoriesParams,
   ): Promise<{ items: SavedRepository[]; total: number }> {
     const db = this.firestoreService.getDb();
-    let query: Query = db
+    const snapshot = await db
       .collection(COLLECTIONS.repositories)
-      .where('userId', '==', params.userId);
+      .where('userId', '==', params.userId)
+      .get();
 
-    if (params.favorited !== undefined) {
-      query = query.where('favorited', '==', params.favorited);
-    }
-
-    if (params.language) {
-      query = query.where('primaryLanguage', '==', params.language);
-    }
-
-    const sortField = params.sort ?? 'updatedAt';
-    const order = params.order ?? 'desc';
-    query = query.orderBy(sortField, order);
-
-    const snapshot = await query.get();
     let items = snapshot.docs.map(
       (doc: QueryDocumentSnapshot) => doc.data() as SavedRepository,
     );
 
+    if (params.favorited !== undefined) {
+      items = items.filter((item) => item.favorited === params.favorited);
+    }
+
+    if (params.language) {
+      items = items.filter((item) => item.primaryLanguage === params.language);
+    }
+
     if (params.q) {
       const needle = params.q.toLowerCase();
       items = items.filter(
-        (item: SavedRepository) =>
+        (item) =>
           item.fullName.toLowerCase().includes(needle) ||
           (item.description ?? '').toLowerCase().includes(needle),
       );
     }
+
+    const sortField = params.sort ?? 'updatedAt';
+    const order = params.order ?? 'desc';
+    const direction = order === 'asc' ? 1 : -1;
+    items = [...items].sort((a, b) => {
+      const left = a[sortField];
+      const right = b[sortField];
+      if (left === right) return 0;
+      if (left == null) return 1;
+      if (right == null) return -1;
+      if (typeof left === 'number' && typeof right === 'number') {
+        return (left - right) * direction;
+      }
+      return String(left).localeCompare(String(right)) * direction;
+    });
 
     const total = items.length;
     const start = (params.page - 1) * params.limit;
