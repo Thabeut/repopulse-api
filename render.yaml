@@ -11,6 +11,18 @@ services:
         value: production
       - key: PORT
         value: 3000
+      - key: AUTH_ALLOW_DEV_HEADER
+        value: "false"
+      - key: SYNC_ENABLED
+        value: "true"
+      - key: SYNC_CRON
+        value: "0 */6 * * *"
+      - key: SYNC_CONCURRENCY
+        value: "2"
+      - key: SYNC_MIN_INTERVAL_MINUTES
+        value: "30"
+      - key: SNAPSHOT_RETENTION
+        value: "90"
       - key: CORS_ORIGINS
         sync: false
       - key: GITHUB_TOKEN
@@ -21,7 +33,3 @@ services:
         sync: false
       - key: FIREBASE_PRIVATE_KEY
         sync: false
-      - key: SYNC_ENABLED
-        value: "true"
-      - key: SYNC_CRON
-        value: "0 */6 * * *"
