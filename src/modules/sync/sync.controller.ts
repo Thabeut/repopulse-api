@@ -17,14 +17,6 @@ class RunSyncQueryDto {
   @Transform(({ value }) => value === true || value === 'true' || value === '1')
   @IsBoolean()
   force?: boolean;
-
-  @ApiPropertyOptional({
-    description: 'Limit sync to current authenticated user when true',
-  })
-  @IsOptional()
-  @Transform(({ value }) => value === true || value === 'true' || value === '1')
-  @IsBoolean()
-  mineOnly?: boolean;
 }
 
 @ApiTags('sync')
@@ -48,7 +40,7 @@ export class SyncController {
   run(@CurrentUserId() userId: string, @Query() query: RunSyncQueryDto) {
     return this.syncService.runAll({
       force: query.force ?? false,
-      userId: query.mineOnly ? userId : undefined,
+      userId,
     });
   }
 }
