@@ -231,4 +231,74 @@ describe('API contracts (e2e)', () => {
 
     expect(response.body.data.uid).toBe('demo-user');
   });
+
+  it('PATCH /api/v1/repositories/:id/favorite updates favorite', async () => {
+    repositories.findById.mockResolvedValue({
+      id: 'demo-user_nestjs_nest',
+      userId: 'demo-user',
+      favorited: false,
+      fullName: 'nestjs/nest',
+    });
+    repositories.upsert.mockImplementation(async (entity) => entity);
+
+    const response = await request(app.getHttpServer())
+      .patch('/api/v1/repositories/demo-user_nestjs_nest/favorite')
+      .send({ favorited: true })
+      .expect(200);
+
+    expect(response.body.data.favorited).toBe(true);
+  });
+
+  it('DELETE /api/v1/repositories/:id removes repo and snapshots', async () => {
+    repositories.findById.mockResolvedValue({
+      id: 'demo-user_nestjs_nest',
+      userId: 'demo-user',
+    });
+    snapshots.deleteByRepositoryId.mockResolvedValue(1);
+    repositories.delete.mockResolvedValue(undefined);
+
+    await request(app.getHttpServer())
+      .delete('/api/v1/repositories/demo-user_nestjs_nest')
+      .expect(200);
+
+    expect(snapshots.deleteByRepositoryId).toHaveBeenCalledWith(
+      'demo-user_nestjs_nest',
+    );
+    expect(repositories.delete).toHaveBeenCalledWith('demo-user_nestjs_nest');
+  });
+
+  it('GET /api/v1/analytics/dashboard returns aggregates', async () => {
+    repositories.findMany.mockResolvedValue({
+      total: 1,
+      items: [
+        {
+          id: '1',
+          fullName: 'a/b',
+          stars: 10,
+          favorited: true,
+          lastSyncedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+    });
+
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/analytics/dashboard')
+      .expect(200);
+
+    expect(response.body.data.repositoryCount).toBe(1);
+    expect(response.body.data.totalStars).toBe(10);
+  });
+
+  it('GET /api/v1/sync/status returns sync status payload', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/sync/status')
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        running: expect.any(Boolean),
+      }),
+    );
+  });
 });

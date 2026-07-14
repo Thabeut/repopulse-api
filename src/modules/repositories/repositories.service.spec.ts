@@ -176,4 +176,61 @@ describe('RepositoriesService', () => {
     );
     expect(repositories.delete).toHaveBeenCalledWith('demo-user_nestjs_nest');
   });
+
+  it('sets favorite on owned repository', async () => {
+    const existing: SavedRepository = {
+      id: 'demo-user_nestjs_nest',
+      userId: 'demo-user',
+      githubId: 1,
+      owner: 'nestjs',
+      ownerAvatarUrl: 'a',
+      name: 'nest',
+      fullName: 'nestjs/nest',
+      description: null,
+      htmlUrl: 'https://github.com/nestjs/nest',
+      defaultBranch: 'master',
+      primaryLanguage: 'TypeScript',
+      languages: {},
+      topics: [],
+      license: null,
+      stars: 1,
+      forks: 0,
+      watchers: 1,
+      openIssues: 0,
+      isFork: false,
+      favorited: false,
+      contributors: [],
+      releases: [],
+      recentCommits: [],
+      commitActivity: [],
+      lastSyncedAt: null,
+      syncStatus: 'idle',
+      lastSyncError: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    repositories.findById.mockResolvedValue(existing);
+    repositories.upsert.mockImplementation(async (entity: SavedRepository) => entity);
+
+    const updated = await service.setFavorite('demo-user', existing.id, {
+      favorited: true,
+    });
+    expect(updated.favorited).toBe(true);
+    expect(repositories.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ favorited: true }),
+    );
+  });
+
+  it('resolves repository by full name for owner', async () => {
+    repositories.findByOwnerName.mockResolvedValue({
+      id: 'demo-user_nestjs_nest',
+      userId: 'demo-user',
+      fullName: 'nestjs/nest',
+    });
+    await expect(
+      service.getByFullName('demo-user', 'nestjs', 'nest'),
+    ).resolves.toEqual(
+      expect.objectContaining({ fullName: 'nestjs/nest' }),
+    );
+  });
 });

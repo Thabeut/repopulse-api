@@ -8,11 +8,13 @@ NestJS · TypeScript · Firebase Admin / Firestore · Swagger · cron
 
 ## Deploy
 
-**Render** — use `render.yaml` or connect this repo as a Web Service:
+**Render** — live: https://repopulse-api.onrender.com
 
 - Build: `npm ci && npm run build`
 - Start: `npm run start:prod`
-- Health: `/api/v1/health`
+- Health: https://repopulse-api.onrender.com/api/v1/health
+- Swagger: https://repopulse-api.onrender.com/api
+- `CORS_ORIGINS` must include `https://web-thabet-kh.vercel.app` (comma-separated with localhost for local UI)
 
 ## Firebase setup
 

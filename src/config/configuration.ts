@@ -1,4 +1,4 @@
-function normalizePrivateKey(raw: string): string {
+export function normalizePrivateKey(raw: string): string {
   let key = raw.trim();
   if (
     (key.startsWith('"') && key.endsWith('"')) ||

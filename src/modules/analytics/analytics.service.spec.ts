@@ -70,6 +70,33 @@ describe('AnalyticsService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  it('returns language distribution for owned repo', async () => {
+    repositories.findById.mockResolvedValue({
+      id: 'demo-user_a_b',
+      userId: 'demo-user',
+      languages: { TypeScript: 80, JavaScript: 20 },
+    });
+    await expect(
+      service.getLanguages('demo-user', 'demo-user_a_b'),
+    ).resolves.toEqual({
+      languages: [
+        { name: 'TypeScript', bytes: 80, percent: 80 },
+        { name: 'JavaScript', bytes: 20, percent: 20 },
+      ],
+    });
+  });
+
+  it('returns commit activity for owned repo', async () => {
+    repositories.findById.mockResolvedValue({
+      id: 'demo-user_a_b',
+      userId: 'demo-user',
+      commitActivity: [1, 2, 3],
+    });
+    await expect(
+      service.getCommitActivity('demo-user', 'demo-user_a_b'),
+    ).resolves.toEqual({ activity: [1, 2, 3] });
+  });
+
   it('builds dashboard aggregates', async () => {
     repositories.findMany.mockResolvedValue({
       total: 2,
