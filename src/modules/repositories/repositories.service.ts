@@ -87,6 +87,13 @@ export class RepositoriesService {
 
   async refresh(userId: string, id: string): Promise<SavedRepository> {
     const existing = await this.getById(userId, id);
+    return this.syncExisting(existing, 'manual');
+  }
+
+  async syncExisting(
+    existing: SavedRepository,
+    source: SnapshotSource,
+  ): Promise<SavedRepository> {
     await this.repositories.upsert({
       ...existing,
       syncStatus: 'syncing',
@@ -99,10 +106,15 @@ export class RepositoriesService {
         existing.name,
         { bypassCache: true },
       );
-      return this.persistNormalized(userId, normalized, 'manual', existing);
+      return this.persistNormalized(
+        existing.userId,
+        normalized,
+        source,
+        existing,
+      );
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Refresh failed';
+        error instanceof Error ? error.message : 'Sync failed';
       await this.repositories.upsert({
         ...existing,
         syncStatus: 'error',
