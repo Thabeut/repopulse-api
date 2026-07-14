@@ -14,7 +14,26 @@ NestJS · TypeScript · Firebase Admin / Firestore · Swagger · cron
 - Start: `npm run start:prod`
 - Health: `/api/v1/health`
 
-Set env vars from `.env.example`.
+## Firebase setup
+
+1. Create a project at https://console.firebase.google.com
+2. Build → Firestore Database → Create database (start in production mode is fine; client access is denied, API uses Admin SDK)
+3. Project settings (gear) → Service accounts → Generate new private key → download JSON
+4. Map JSON fields into `api/.env`:
+
+```bash
+FIREBASE_PROJECT_ID=<project_id from JSON>
+FIREBASE_CLIENT_EMAIL=<client_email from JSON>
+FIREBASE_PRIVATE_KEY="<private_key from JSON — keep quotes; leave \n sequences as-is>"
+```
+
+Example private key line (one line with escaped newlines):
+
+```bash
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
+```
+
+5. Restart the API. `GET /api/v1/health` should show `"firestore": "up"`.
 
 ## Local
 

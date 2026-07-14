@@ -28,7 +28,8 @@ describe('API contracts (e2e)', () => {
       .expect(200);
 
     expect(response.body.success).toBe(true);
-    expect(response.body.data.status).toBe('ok');
+    expect(response.body.data.status).toMatch(/ok|degraded/);
+    expect(response.body.data.firestore).toMatch(/up|down|unconfigured/);
     expect(response.body.data.timestamp).toEqual(expect.any(String));
   });
 
