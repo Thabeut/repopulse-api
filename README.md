@@ -15,6 +15,8 @@ Backend for [RepoPulse](https://web-thabet-kh.vercel.app) — pulls GitHub repos
 - Google / Firebase ID token auth (Bearer)
 - Analytics helpers (history, languages, commit activity)
 
+> **Cron note:** Sync runs in-process on the Nest web service (`SYNC_CRON`, default every 6h) — there is no separate worker. On Render’s free tier the dyno sleeps when idle, so scheduled runs only fire while the service is awake (you can also trigger `POST /api/v1/sync/run`).
+
 ## Setup
 
 Requires Node 20+.
